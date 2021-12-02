@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+  docker-registry-v2:
+    restart: always
+    image: whatwewant/nginx-basic-auth:v0.0.5
+    depends_on:
+      - docker-registry-backend
+    environment:
+      BASIC_AUTH_USERNAME: ${SERVICE_DOCKER_REGISTRY_ADMIN_USERNAME}
+      BASIC_AUTH_PASSWORD: ${SERVICE_DOCKER_REGISTRY_ADMIN_PASSWORD}
+      PROXY_PASS: http://docker-registry-backend:5000
+      CLIENT_MAX_BODY_SIZE: 0
+    volumes:
+      - ${SERVICE_DOCKER_REGISTRY_HTPASSWD_CONFIG}:/etc/nginx/.htpasswd
+
+  docker-registry-backend:
+    restart: always
+    image: registry:${SERVICE_DOCKER_REGISTRY_VERSION}
+    environment:
+      REGISTRY_HTTP_RELATIVEURLS: 'true' # should set
+      REGISTRY_STORAGE: oss
+      REGISTRY_STORAGE_OSS_ACCESSKEYID: ${SERVICE_DOCKER_REGISTRY_ALY_OSS_ACCESS_KEY}
+      REGISTRY_STORAGE_OSS_ACCESSKEYSECRET: ${SERVICE_DOCKER_REGISTRY_ALY_OSS_ACCESS_SECRET}
+      REGISTRY_STORAGE_OSS_REGION: ${SERVICE_DOCKER_REGISTRY_ALY_OSS_REGION}
+      REGISTRY_STORAGE_OSS_BUCKET: ${SERVICE_DOCKER_REGISTRY_ALY_OSS_BUCKET}
+      REGISTRY_STORAGE_OSS_INTERNAL: 'false' # 'true'
+      REGISTRY_STORAGE_OSS_SECURE: 'true' # 'false'
+    volumes:
+      - ${SERVICE_DATA}:/var/lib/registry
+      - ${SERVICE_DOCKER_MIRROR_CONFIG}:/etc/docker/registry/config-mirror.yml
+    command:
+      - /etc/docker/registry/config-mirror.yml
+
+  docker-registry:
+    restart: always
+    image: whatwewant/openresty-oauth2.0:v1.0.16
+    environment:
+      PROXY_PASS: http://docker-registry-ui:80
+      ROOT_URL: https://${SERVICE_DOCKER_REGISTRY_DOMAIN}
+      PROVIDER: doreamon
+      CLIENT_ID: ${SERVICE_DOCKER_REGISTRY_DOREAMON_CLIENT_ID}
+      CLIENT_SECRET: ${SERVICE_DOCKER_REGISTRY_DOREAMON_CLIENT_SECRET}
+      ALLOW_USERNAMES: ${SERVICE_DOCKER_REGISTRY_DOREAMON_ALLOW_USERNAMES}
+
+  docker-registry-ui:
+    restart: always
+    image: jc21/registry-ui
+    environment:
+      REGISTRY_HOST: docker-registry-backend:5000
+      REGISTRY_SSL: 'false'
+      REGISTRY_DOMAIN: ${SERVICE_DOCKER_REGISTRY_DOMAIN}
+      REGISTRY_STORAGE_DELETE_ENABLED:
+
+networks:
+  default:
+    external: true
+    name: compose-ingress
