@@ -28,7 +28,7 @@ services:
       REGISTRY_STORAGE_OSS_SECURE: 'true' # 'false'
     volumes:
       - ${SERVICE_DATA}:/var/lib/registry
-      - ${SERVICE_DOCKER_MIRROR_CONFIG}:/etc/docker/registry/config-mirror.yml
+      - ${SERVICE_DOCKER_REGISTRY_MIRROR_CONFIG}:/etc/docker/registry/config-mirror.yml
     command:
       - /etc/docker/registry/config-mirror.yml
 
