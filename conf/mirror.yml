@@ -14,5 +14,5 @@ http:
   addr: :5000
 
 proxy:
-  remote: https://registry-1.docker.io
+  remoteurl: https://registry-1.docker.io
 
