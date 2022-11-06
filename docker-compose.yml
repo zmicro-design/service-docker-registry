@@ -16,7 +16,7 @@ services:
 
   docker-registry-backend:
     restart: always
-    image: whatwewant/registry:${SERVICE_DOCKER_REGISTRY_VERSION}
+    image: registry:${SERVICE_DOCKER_REGISTRY_VERSION}
     environment:
       REGISTRY_HTTP_RELATIVEURLS: 'true' # should set
       REGISTRY_STORAGE: oss
